@@ -2,9 +2,9 @@ use std::sync::atomic::AtomicBool;
 
 use bevy::prelude::*;
 
-use bevy::render::render_resource::{AddressMode, SamplerDescriptor, FilterMode};
+use bevy::render::render_resource::{AddressMode, FilterMode, SamplerDescriptor};
 use bevy::render::texture::ImageSampler;
-use bevy::window::{WindowResolution, WindowMode};
+use bevy::window::{WindowMode, WindowResolution};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_rapier3d::prelude::*;
 use car_camera::CameraFollow;
@@ -13,35 +13,37 @@ use car_suspension::WheelInfo;
 use rand::rngs::ThreadRng;
 use rand::Rng;
 
-pub mod vector_operations;
-pub mod car_suspension;
 pub mod car_camera;
 pub mod car_controls;
-pub mod ui_management;
+pub mod car_suspension;
 pub mod timer_text;
+pub mod ui_management;
+pub mod vector_operations;
 
 fn main() {
     App::new()
         .insert_resource(ClearColor(Color::MIDNIGHT_BLUE))
-        .add_plugins(DefaultPlugins.set(WindowPlugin {
-            primary_window: Some(Window {
-                position: WindowPosition::Centered(MonitorSelection::Primary),
-                resolution: WindowResolution::new(1920., 1080.),
-                mode: WindowMode::BorderlessFullscreen,
-                ..default()
-            }),
-            ..default()
-        }).set(ImagePlugin {
-                default_sampler: SamplerDescriptor 
-                {
-                mag_filter: FilterMode::Nearest,
-                min_filter: FilterMode::Nearest,
-                mipmap_filter: FilterMode::Nearest,
-                ..Default::default()
-                },..default()
-            }
-
-        ))
+        .add_plugins(
+            DefaultPlugins
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        position: WindowPosition::Centered(MonitorSelection::Primary),
+                        resolution: WindowResolution::new(1920., 1080.),
+                        mode: WindowMode::BorderlessFullscreen,
+                        ..default()
+                    }),
+                    ..default()
+                })
+                .set(ImagePlugin {
+                    default_sampler: SamplerDescriptor {
+                        mag_filter: FilterMode::Nearest,
+                        min_filter: FilterMode::Nearest,
+                        mipmap_filter: FilterMode::Nearest,
+                        ..Default::default()
+                    },
+                    ..default()
+                }),
+        )
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         //.add_plugin(RapierDebugRenderPlugin::default())
         //.add_plugin(WorldInspectorPlugin::default())
@@ -54,11 +56,13 @@ fn main() {
         .insert_resource(MapStatus { loaded: false })
         .add_startup_system(ui_management::initialize_dialogue)
         .add_system(timer_text::text_update_system)
-        .insert_resource(timer_text::Completion{finished : false,started : false})
+        .insert_resource(timer_text::Completion {
+            finished: false,
+            started: false,
+        })
         .init_resource::<AssetsLoading>()
         .run();
 }
-
 
 fn setup_graphics(mut commands: Commands) {
     commands
@@ -73,7 +77,9 @@ fn setup_graphics(mut commands: Commands) {
             distance_behind: 10.,
         });
 }
+
 const CAR_SIZE: Vec3 = Vec3::new(0.5, 0.3, 0.935);
+
 pub fn setup_physics(
     asset_server: Res<AssetServer>,
     mut loading: ResMut<AssetsLoading>,
@@ -102,48 +108,49 @@ pub fn setup_physics(
         },
         ..default()
     });
-    
+
     let car_size = CAR_SIZE;
 
+    let mut wheel_vec = Vec::new();
 
-    let mut wheel_vec =Vec::new();
-    
-    for i in 0..4
-    {
-        let wheel_entity = commands.spawn(SceneBundle {
-            transform: Transform::from_xyz(0.0, 0.0, 0.0),
-            scene: asset_server.load("wheel.glb#Scene0"),
-            ..default()
-        }).id();
-    
-        wheel_vec.push(WheelInfo{entity:wheel_entity,hit:false});
+    for i in 0..4 {
+        let wheel_entity = commands
+            .spawn(SceneBundle {
+                transform: Transform::from_xyz(0.0, 0.0, 0.0),
+                scene: asset_server.load("wheel.glb#Scene0"),
+                ..default()
+            })
+            .id();
+
+        wheel_vec.push(WheelInfo {
+            entity: wheel_entity,
+            hit: false,
+        });
     }
-    
-
 
     commands
         .spawn((
             SceneBundle {
                 transform: Transform::from_xyz(0., 1., 0.),
                 //mesh: meshes.add(Mesh::from(shape::Cube { ..default() })),
-                scene : asset_server.load("car.glb#Scene0"),
+                scene: asset_server.load("car.glb#Scene0"),
                 //material: materials.add(Color::rgb(1., 1., 1.).into()),
                 ..default()
             },
             //TransformBundle::from(Transform::from_xyz(0., 5., 0.)),
             RigidBody::Dynamic,
-            Collider::cuboid(car_size.x,car_size.y,car_size.z),
+            Collider::cuboid(car_size.x, car_size.y, car_size.z),
         ))
         .insert(car_suspension::CarPhysics {
-            wheels_stationary_animation_speed : 10.,
-            wheels_animation_speed : 3.,
-            wheel_infos : wheel_vec,
-            plane : Vec3::ZERO,
-            car_size : CAR_SIZE,
+            wheels_stationary_animation_speed: 10.,
+            wheels_animation_speed: 3.,
+            wheel_infos: wheel_vec,
+            plane: Vec3::ZERO,
+            car_size: CAR_SIZE,
             car_transform_camera: Transform::from_xyz(0., 0., 0.),
         })
         .insert(CarController {
-            car_linear_damping : 0.5,
+            car_linear_damping: 0.5,
             rotate_to_rotation: Quat::IDENTITY,
             slerp_speed: 5.,
             rotated_last_frame: false,
@@ -167,7 +174,6 @@ pub fn setup_physics(
         })
         .insert(Ccd::enabled());
 }
-
 
 #[derive(Resource, Default)]
 pub struct AssetsLoading(Vec<HandleUntyped>);
@@ -197,11 +203,11 @@ fn check_assets_ready(
         }
     }
 }
+
 #[derive(Resource)]
 pub struct MapStatus {
     pub loaded: bool,
 }
-
 
 fn setup_map(
     mut commands: Commands,
@@ -224,7 +230,7 @@ fn setup_map(
     let normal_handle = asset_server.load("sand_normal.png");
     let ground_mat = materials.add(StandardMaterial {
         normal_map_texture: Some(normal_handle.clone()),
-        base_color: Color::rgb(1.2,1.2,1.),
+        base_color: Color::rgb(1.2, 1.2, 1.),
         perceptual_roughness: 0.5,
         base_color_texture: Some(texture_handle.clone()),
         cull_mode: None,
@@ -247,6 +253,7 @@ fn setup_map(
         .insert(x_shape);
     map_status.loaded = true;
 }
+
 pub fn neg_or_pos(rng: &mut ThreadRng) -> i32 {
     if rng.gen_range(0..2) == 1 {
         return 1;

@@ -5,6 +5,7 @@ pub fn from_to_rotation(a_from: Vec3, a_to: Vec3) -> Quat {
     let angle = angle_func(a_from, a_to);
     return Quat::from_axis_angle(Vec3::normalize(axis), angle);
 }
+
 pub fn angle_func(from: Vec3, to: Vec3) -> f32 {
     return f32::acos(f32::clamp(
         Vec3::dot(Vec3::normalize(from), Vec3::normalize(to)),
@@ -12,6 +13,7 @@ pub fn angle_func(from: Vec3, to: Vec3) -> f32 {
         1.0,
     )) * 57.29578;
 }
+
 pub fn quaternion_look_rotation(mut forward: Vec3, up: Vec3) -> Quat {
     forward = forward.normalize();
 
