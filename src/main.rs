@@ -10,12 +10,17 @@ use bevy_rapier3d::prelude::*;
 use car_camera::CameraFollow;
 use car_controls::CarController;
 use car_suspension::WheelInfo;
+use constants::{
+    CAMERA_DISTANCE_BEHIND, CAMERA_INIT, CAMERA_LOOK_AT, CAMERA_TRANSLATION_SPEED,
+    CAR_ROTATE_SPEED, CAR_SIZE, CAR_SPEED,
+};
 use rand::rngs::ThreadRng;
 use rand::Rng;
 
 pub mod car_camera;
 pub mod car_controls;
 pub mod car_suspension;
+pub mod constants;
 pub mod timer_text;
 pub mod ui_management;
 pub mod vector_operations;
@@ -28,8 +33,8 @@ fn main() {
                 .set(WindowPlugin {
                     primary_window: Some(Window {
                         position: WindowPosition::Centered(MonitorSelection::Primary),
-                        resolution: WindowResolution::new(1920., 1080.),
-                        mode: WindowMode::BorderlessFullscreen,
+                        resolution: WindowResolution::new(800., 600.),
+                        // mode: WindowMode::BorderlessFullscreen,
                         ..default()
                     }),
                     ..default()
@@ -67,18 +72,15 @@ fn main() {
 fn setup_graphics(mut commands: Commands) {
     commands
         .spawn(Camera3dBundle {
-            transform: Transform::from_xyz(-90.0, 500.0, 90.0)
-                .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
+            transform: Transform::from_translation(CAMERA_INIT).looking_at(CAMERA_LOOK_AT, Vec3::Y),
             ..Default::default()
         })
         .insert(CameraFollow {
-            camera_translation_speed: 1000.,
+            camera_translation_speed: CAMERA_TRANSLATION_SPEED,
             fake_transform: Transform::from_xyz(0., 0., 0.),
-            distance_behind: 10.,
+            distance_behind: CAMERA_DISTANCE_BEHIND,
         });
 }
-
-const CAR_SIZE: Vec3 = Vec3::new(0.5, 0.3, 0.935);
 
 pub fn setup_physics(
     asset_server: Res<AssetServer>,
@@ -155,8 +157,8 @@ pub fn setup_physics(
             slerp_speed: 5.,
             rotated_last_frame: false,
             center_of_mass_altered: false,
-            speed: 50000.,
-            rotate_speed: 5200.,
+            speed: CAR_SPEED,
+            rotate_speed: CAR_ROTATE_SPEED,
         })
         .insert(Velocity { ..default() })
         .insert(ExternalImpulse {

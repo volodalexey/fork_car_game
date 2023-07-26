@@ -1,7 +1,12 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use crate::{car_camera::CameraFollow, car_suspension::CarPhysics, timer_text::Completion};
+use crate::{
+    car_camera::CameraFollow,
+    car_suspension::CarPhysics,
+    constants::{FORCE_TORQUE_ADD, TORQUE_IMPULSE_COUP},
+    timer_text::Completion,
+};
 
 #[derive(Component)]
 pub struct CarController {
@@ -49,7 +54,7 @@ pub fn car_controls(
             );
             impulse.impulse = new_impluse.impulse;
             //impulse.impulse = Vec3::new(0.,0.01,0.);
-            impulse.torque_impulse = Vec3::new(1., 0., 0.);
+            impulse.torque_impulse = TORQUE_IMPULSE_COUP;
         }
         if car_controller.center_of_mass_altered == false {
             commands
@@ -76,7 +81,7 @@ pub fn car_controls(
                     car_transform.forward() * car_controller.speed * time.delta_seconds();
             }
             if keys.just_pressed(KeyCode::W) {
-                force.torque += car_transform.left() * 300.;
+                force.torque += car_transform.left() * FORCE_TORQUE_ADD;
             }
             if keys.pressed(KeyCode::S) {
                 completion.started = true;
@@ -84,7 +89,7 @@ pub fn car_controls(
                     car_transform.forward() * car_controller.speed * time.delta_seconds();
             }
             if keys.just_pressed(KeyCode::S) {
-                force.torque -= car_transform.left() * 300.;
+                force.torque -= car_transform.left() * FORCE_TORQUE_ADD;
             }
             car_controller.rotate_to_rotation = car_transform.rotation;
 

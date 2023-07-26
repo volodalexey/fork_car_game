@@ -1,7 +1,10 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use crate::car_camera::CameraFollow;
+use crate::{
+    car_camera::CameraFollow,
+    constants::{SUSPENSION_DAMPING, SUSPENSION_STRENGTH},
+};
 
 #[derive(Clone)]
 pub struct WheelInfo {
@@ -73,13 +76,11 @@ pub fn update_car_suspension(
                     car_physics.wheel_infos[i].hit = true;
                     let compression = 1.
                         - (ray_intersection.toi * car_transform.down().length() / max_suspension);
-                    let suspension_strength = 15000.;
-                    let suspension_damping = 1200.;
 
                     let add_force = ExternalForce::at_point(
                         car_transform.up()
-                            * ((compression * suspension_strength)
-                                - (suspension_damping * (velocity.linvel.y)))
+                            * ((compression * SUSPENSION_STRENGTH)
+                                - (SUSPENSION_DAMPING * (velocity.linvel.y)))
                             * time.delta_seconds(),
                         wheel_vec[i],
                         car_transform.translation,
